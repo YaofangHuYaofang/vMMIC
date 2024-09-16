@@ -11,14 +11,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
   
   y_vec <- inputdata$y
   
-  E_beta_list <- matrix(NA, nrow = max_iter, ncol = d0)
-  E_gamma_list <- matrix(NA, nrow = max_iter, ncol = d1)
-  E_b_list <- matrix(NA, nrow = max_iter, ncol = d0)
-  E_d_list <- matrix(NA, nrow = max_iter, ncol = d1)
-  E_y_list <- matrix(NA, nrow = max_iter, ncol = n)
-  E_delta_list <- matrix(NA, nrow = max_iter, ncol = n*m)
-  E_U_list <- matrix(NA, nrow = max_iter, ncol = n*m)
-  
   # sample initials alpha, beta, gamma, a, b, c and d
   
   E_delta <- matrix(0.5, nrow = m, ncol = n)
@@ -46,7 +38,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
   m_beta <- V_beta %*% m_beta
   E_beta <- m_beta
   E_beta2 <- matrix(outer(E_beta, E_beta), nrow = length(E_beta), ncol = length(E_beta)) + V_beta
-  E_beta_list[1, ] <- c(E_beta)
   
   V_gamma_inv <- solve(Sigma_gamma)
   m_gamma <- solve(Sigma_gamma)%*%mu_gamma
@@ -65,7 +56,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
   m_gamma <- V_gamma %*% m_gamma
   E_gamma <- m_gamma
   E_gamma2 <- matrix(outer(E_gamma, E_gamma), nrow = length(E_gamma), ncol = length(E_gamma)) + V_gamma
-  E_gamma_list[1, ] <- c(E_gamma)
   
   V_b_inv <- solve(Sigma_b)
   m_b <- solve(Sigma_b)%*%mu_b
@@ -81,7 +71,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
   m_b <- V_b %*% m_b
   E_b <- m_b
   E_b2 <- matrix(outer(E_b, E_b), nrow = length(E_b), ncol = length(E_b)) + V_b
-  E_b_list[1, ] <- c(E_b)
   
   V_d_inv <- solve(Sigma_d)
   m_d <- solve(Sigma_d)%*%mu_d
@@ -97,7 +86,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
   m_d <- V_d %*% m_d
   E_d <- m_d
   E_d2 <- matrix(outer(E_d, E_d), nrow = length(E_d), ncol = length(E_d)) + V_d
-  E_d_list[1, ] <- c(E_d)
   
   w <- inputdata$w
   X <- inputdata$X
@@ -114,13 +102,11 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
   E_y0 <- m_y - dnorm(-m_y)/pnorm(-m_y)
   E_y[y_vec == 0] <- E_y0[y_vec ==0]
   E_y[y_vec == 1] <- E_y1[y_vec ==1]
-  E_y_list[1, ] <- E_y
   
   m_U <- sapply(1:n, function(i) E_b[1]+(1-w[[i]])*(X[[i]][,-1]%*%E_b[-1]) + 
                   E_d[1]+w[[i]]*(Z[[i]][,-1]%*%E_d[-1]))
   E_U <- m_U
   E_U2 <- m_U^2+1
-  E_U_list[1, ] <- c(E_U)
   
   ad1_ini <- sapply(1:n, function(i) E_beta[1]+ E_gamma[1]+ E_delta[,i]*((as.numeric(1-w[[i]]) * X[[i]][,-1]) %*% E_beta[-1]+
                                                                            (as.numeric(w[[i]]) * Z[[i]][,-1]) %*% E_gamma[-1]))
@@ -140,7 +126,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
   E_delta <- AA
   V_delta <- AA*BB
   E_delta2 <- E_delta^2 + V_delta
-  E_delta_list[1, ] <- c(E_delta)
   
   E_U2 <- (BB-AA)*(m_U^2+1)*pnorm(-m_U) + (AA-BB)*m_U*exp(-1/2*m_U^2)/sqrt(2*pi) +
     AA*(m_U^2 + 1)/(AA + (BB-AA*pnorm(-m_U)))
@@ -170,7 +155,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
     m_beta <- V_beta %*% m_beta
     E_beta <- m_beta
     E_beta2 <- matrix(outer(E_beta, E_beta), nrow = length(E_beta), ncol = length(E_beta)) + V_beta
-    E_beta_list[h, ] <- E_beta
     
     V_gamma_inv <- solve(Sigma_gamma)
     m_gamma <- solve(Sigma_gamma)%*%mu_gamma
@@ -188,7 +172,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
     m_gamma <- V_gamma %*% m_gamma
     E_gamma <- m_gamma
     E_gamma2 <- matrix(outer(E_gamma, E_gamma), nrow = length(E_gamma), ncol = length(E_gamma)) + V_gamma
-    E_gamma_list[h, ] <- E_gamma
     
     V_b_inv <- solve(Sigma_b)
     m_b <- solve(Sigma_b)%*%mu_b
@@ -205,7 +188,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
     m_b <- V_b %*% m_b
     E_b <- m_b
     E_b2 <- matrix(outer(E_b, E_b), nrow = length(E_b), ncol = length(E_b)) + V_b
-    E_b_list[h, ] <- E_b
     
     V_d_inv <- solve(Sigma_d)
     m_d <- solve(Sigma_d)%*%mu_d
@@ -221,7 +203,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
     m_d <- V_d %*% m_d
     E_d <- m_d
     E_d2 <- matrix(outer(E_d, E_d), nrow = length(E_d), ncol = length(E_d)) + V_d
-    E_d_list[h, ] <- E_d
     
     w <- inputdata$w
     X <- inputdata$X
@@ -238,7 +219,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
     E_y0 <- m_y - dnorm(-m_y)/pnorm(-m_y)
     E_y[y_vec == 0] <- E_y0[y_vec ==0]
     E_y[y_vec == 1] <- E_y1[y_vec ==1]
-    E_y_list[h, ] <- E_y
     
     m_U <- sapply(1:n, function(i) (1-w[[i]])*(E_b[1] + X[[i]][,-1]%*%E_b[-1])
                   +w[[i]]*(E_d[1] + Z[[i]][,-1]%*%E_d[-1]))
@@ -246,7 +226,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
       (AA+(BB-AA)*pnorm(-m_U))
     E_U2 <- ((BB-AA)*(m_U^2+1)*pnorm(-m_U)+(AA-BB)*m_U/sqrt(2*pi)*exp(-1/2*m_U^2)+
                AA*(m_U^2+1))/(AA+(BB-AA)*pnorm(-m_U))
-    E_U_list[h, ] <- c(E_U)
     
     ad1_ini <- sapply(1:n, function(i) E_beta[1]+E_gamma[1]+E_delta[,i]*((as.numeric(1-w[[i]]) * X[[i]][,-1]) %*% E_beta[-1] +
                                                                            (as.numeric(w[[i]]) * Z[[i]][,-1]) %*% E_gamma[-1]))
@@ -265,7 +244,6 @@ vMMIC <- function(inputdata, max_iter, epsilon_conv){
     BB[is.nan(BB)] <- 0.5
     E_delta <- AA
     V_delta <- AA*BB
-    E_delta_list[h, ] <- c(E_delta)
     
     p <- sapply(1:n, function(i) pnorm(E_beta[1]+ E_gamma[1] + t(as.numeric(1-w[[i]]) * E_delta[, i]) %*% X[[i]][,-1] %*% E_beta[-1] +
                                          t(as.numeric(w[[i]]) * E_delta[, i]) %*% Z[[i]][,-1] %*% E_gamma[-1]))
